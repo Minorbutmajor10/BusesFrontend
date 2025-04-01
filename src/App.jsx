@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import BusTable from "./components/BusTable";
 import BusDetailsModal from "./components/BusDetailsModal";
+import { fetchBuses, fetchBusDetails } from './services/apis';
 
 
 function App() {
@@ -11,31 +13,28 @@ function App() {
 
   
   useEffect(() => {
-    const fetchBuses = async () => {
+    const loadBuses = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8090/bus?page=${currentPage}&size=10`
-        );
-        const data = await response.json();
+        const data = await fetchBuses(currentPage, pageSize);
         setBuses(data.content);
         setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error('Error fetching buses:', error);
       }
     };
-    fetchBuses();
+    loadBuses();
   }, [currentPage]);
 
   
-  const fetchBusDetails = async (id) => {
+  const handleRowClick = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8090/bus/fid/${id}`);
-      const data = await response.json();
+      const data = await fetchBusDetails(id);
       setSelectedBus(data);
     } catch (error) {
       console.error('Error fetching bus details:', error);
     }
   };
+
 
   return (
     <div className="container-fluid vh-100 d-flex flex-column p-0">
@@ -51,38 +50,10 @@ function App() {
             {buses.length > 0 ? (
               <>
                  <div className="table-responsive  rounded-3">
-                 <table className="table table-hover mb-0">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>Número de Bus</th>
-                      <th>Placa</th>
-                      <th>Marca</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {buses.map((bus) => (
-                      <tr 
-                      key={bus.id} 
-                      onClick={() => {
-                        console.log('Click en bus:', bus.id); 
-                        setSelectedBus(bus);
-                      }}
-                      style={{ cursor: "pointer" }}
-                      className="hover-effect" 
-                    >
-                        <td>{bus.numeroBus}</td>
-                        <td>{bus.placa}</td>
-                        <td>{bus.marca?.nombre}</td>
-                        <td>
-                          <span className={`badge ${bus.activo ? "bg-success" : "bg-danger"}`}>
-                            {bus.activo ? "Activo" : "Inactivo"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                 <BusTable 
+                buses={buses} 
+                onRowClick={handleRowClick} 
+              />
                 </div>
 
                 <div className="d-flex justify-content-center mt-4">
